@@ -11,6 +11,7 @@ using Tourism.Models;
 
 namespace Tourism.FeatureTests
 {
+    [Collection("City Controller Tests")]
     public class CityCRUDTests : IClassFixture<WebApplicationFactory<Program>>
     {
         private readonly WebApplicationFactory<Program> _factory;
@@ -18,6 +19,36 @@ namespace Tourism.FeatureTests
         public CityCRUDTests(WebApplicationFactory<Program> factory)
         {
             _factory = factory;
+        }
+
+        [Fact]
+        public async Task Index_ShowsAllCitiesForAState()
+        {
+            var client = _factory.CreateClient();
+            var context = GetDbContext();
+
+            State washington = new State { Name = "Washington", Abbreviation = "WA", };
+            City seattle = new City { Name = "Seattle" };
+			City spokane = new City { Name = "Spokane" };
+            State colorado = new State { Name = "Colorado", Abbreviation = "CO" };
+            City denver = new City { Name = "Denver" };
+            washington.Cities.Add(seattle);
+            washington.Cities.Add(spokane);
+            colorado.Cities.Add(denver);
+
+            context.States.Add(washington);
+            context.States.Add(colorado);
+            context.SaveChanges();
+
+            var response = await client.GetAsync($"/states/{washington.Id}/cities");
+            var html = await response.Content.ReadAsStringAsync();
+
+            response.EnsureSuccessStatusCode();
+            Assert.Contains("Cities in Washington", html);
+            Assert.Contains("Seattle", html);
+            Assert.Contains("Spokane", html);
+            Assert.DoesNotContain("Colorado", html);
+            Assert.DoesNotContain("Denver", html);
         }
 
         [Fact]
@@ -43,14 +74,16 @@ namespace Tourism.FeatureTests
             var context = GetDbContext();
             var client = _factory.CreateClient();
 
-            context.States.Add(new State { Name = "Iowa", Abbreviation = "IA" });
+            var iowa = new State { Name = "Iowa", Abbreviation = "IA" };
+
+			context.States.Add(iowa);
             context.SaveChanges();
 
-            var response = await client.GetAsync("/states/1/cities/new");
+            var response = await client.GetAsync($"/states/{iowa.Id}/cities/new");
             var html = await response.Content.ReadAsStringAsync();
 
             Assert.Contains("Add city to Iowa", html);
-            Assert.Contains("<form method=\"post\" action=\"/states/1/cities\">", html);
+            Assert.Contains($"<form method=\"post\" action=\"/states/{iowa.Id}/cities\">", html);
         }
 
         [Fact]
