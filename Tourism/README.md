@@ -39,9 +39,19 @@ Edit this file with your answers.
 
 2. How does a form submission know what request should be made? Use examples.
 
+    Inside the form header on the cshtml file you put the method and action. On the new state form, it reads ```<form method="post" action="/states">```,
+    so when you click the submit button, it sends a "post" request to "/states".
+
 3. Imagine you are explaining how to create a resource to a co-worker.  How would you describe how the controller action `Create` works?
 
+    The create action takes in an HttpPost request and saves the information in the request body to the database. It
+    then returns a redirect to a page relevant to the information that was added, usually an index or show page.
+
 4. In our State creation functionality - what would happen if a user did not enter an Abbreviation before submitting the form?
+
+    When a user submits the form without an abbreviation, We get an error when the program tries to save the state to the database
+    in the create action in the states controller. Because the state object doesn't have any information for the Abbreviation
+    property, the Abbreviation null when it tries to add it to the database, which is not allowed in this program.
 
 
 ## Rubric
