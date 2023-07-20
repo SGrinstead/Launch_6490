@@ -5,6 +5,7 @@ using Tourism.Models;
 
 namespace Tourism.FeatureTests
 {
+    [Collection("State Controller Tests")]
     public class StateCRUDTests : IClassFixture<WebApplicationFactory<Program>>
     {
         private readonly WebApplicationFactory<Program> _factory;
@@ -61,6 +62,39 @@ namespace Tourism.FeatureTests
             context.Database.EnsureCreated();
 
             return context;
+        }
+
+        [Fact]
+        public async Task New_ReturnsForm()
+        {
+			var client = _factory.CreateClient();
+
+			var response = await client.GetAsync("/states/new");
+			var html = await response.Content.ReadAsStringAsync();
+
+            response.EnsureSuccessStatusCode();
+            Assert.Contains("<form method=\"post\" action=\"/states\">", html);
+            Assert.Contains("State Name:", html);
+			Assert.Contains("State Abbreviation:", html);
+		}
+
+        [Fact]
+        public async Task Create_ReturnsRedirect()
+        {
+            var client = _factory.CreateClient();
+            var context = GetDbContext();
+
+            var stateFormData = new Dictionary<string, string>
+            {
+                { "Name", "Texas"},
+                { "Abbreviation", "TX" }
+            };
+
+            var response = await client.PostAsync("/states", new FormUrlEncodedContent(stateFormData));
+            var html = await response.Content.ReadAsStringAsync();
+
+            response.EnsureSuccessStatusCode();
+            Assert.Contains("Texas", html);
         }
     }
 }
